@@ -1,16 +1,15 @@
-## United States presidential election 2020 result
-
-# install.packages('rvest')
-# install.packages('urltools')
-
-## author: 1771087 seokbeom, jeon
+## The result of United States presidential election in 2020
+## Author: 1771087 Seok-beom, Jeon
+#ENV
+# Windows 10 Pro 1909
+# 
 
 ## Packages
-# if you do not have packages below, use install.packages('<package_name>')
+# Install packages below using install.packages('<package_name>')
 # HTML elements
 library(rvest) 
-# rvest is possible to crawl static web page crawling
-# RSelenium is possible to crawl dynamic web page
+# rvest for static web page
+# RSelenium for web page
 library(RSelenium)
 # HTTP connection
 library(httr)
@@ -23,61 +22,69 @@ library(stringr)
 library(tidyverse)
 
 
-
-## Reference
+## References
 #
-# Ref. language:  Korean
+# lang:           KO
 # url:            https://statkclee.github.io/yonsei/data/R_Web_Crawling.pdf
 # about:          R Web Crawling
 #
-# Ref. language:  Korean 
+# lang:           KO
 # url:            https://truman.tistory.com/166
 # about:          RSelenium Usage
-## Type below on Windows cmd previously located on your 
-## java -Dwebdriver.gecko.driver="geckodriver.exe" -jar selenium-server-standalone-3.141.59.jar -port 4545
 
-driver <- remoteDriver(remoteServerAddr='localhost',
+## Install prerequisites for using RSelenium
+# selenium:     https://www.seleniumhq.org/download/
+# geckodriver:  https://github.com/mozilla/geckodriver
+# chromedriver: https://sites.google.com/a/chromium.org/chromedriver/downloads
+
+## Put prerequisites on same directory and
+## Run selenium server using command
+# java -Dwebdriver.gecko.driver="geckodriver.exe" -jar selenium-server-standalone-3.141.59.jar -port 4545
+
+# Create RSelenium driver
+driver <- RSelenium::remoteDriver(remoteServerAddr='localhost',
                        port=4545L,
                        browserName='chrome')
 
-# open browser
+# Open browser
 driver$open()
 
-# connect to url
+# Connect browser to url
 url <- 'https://www.nbcnews.com/politics/2020-elections/president-results'
 driver$navigate(url)
 
-# click button to scrap data which i want
+# Click button on the page
 driver$findElement(using='xpath',
                    value='//*[@id="live-list-item-1"]/main/div[1]/div[2]/div/div[2]/button')$clickElement()
 
 
 ###### 
-## Get data from Web page & Data preprocessing
-# read current page sources
+## Data preprocessing
+######
+
+# Read current page sources
 src <- driver$getPageSource()[[1]]
 html <- read_html(src)
 
 (state_colname <- html_nodes(html,
-                            css='#live-list-item-1 > main > div.jsx-2521325328.page-content.relative > div:nth-child(2) > div > div.mt8 > div > div.jsx-2193855077 > div.cell-list > div') %>% html_text())
+                             css='#live-list-item-1 > main > div.jsx-2521325328.page-content.relative > div:nth-child(2) > div > div.mt8 > div > div.jsx-2193855077 > div.cell-list > div') %>% html_text())
 
-## state names data
 (state_column <- html_nodes(html,
                             css='#live-list-item-1 > main > div.jsx-2521325328.page-content.relative > div:nth-child(2) > div > div.mt8 > div > div.jsx-2193855077 > div.cell-list > ul > li > div > div.dn.db-m') %>% html_text())
 
 dim(state_column) <- c(51, 1)
+print(state_column)
 colnames(state_column) <- state_colname
-state_column
+head(state_column)
 
-# Biden's percentage and votes
 (Biden_percent_colname <- html_nodes(html,
-                           css='#live-list-item-1 > main > div.jsx-2521325328.page-content.relative > div:nth-child(2) > div > div.mt8 > div > div.jsx-1526806201.scrollable-grid > div > div:nth-child(1) > div.jsx-3384420229.column-group > div:nth-child(1) > div > div') %>% html_text())
+                                     css='#live-list-item-1 > main > div.jsx-2521325328.page-content.relative > div:nth-child(2) > div > div.mt8 > div > div.jsx-1526806201.scrollable-grid > div > div:nth-child(1) > div.jsx-3384420229.column-group > div:nth-child(1) > div > div') %>% html_text())
 (Biden_percent_column <- html_nodes(html,
-                                   css='#live-list-item-1 > main > div.jsx-2521325328.page-content.relative > div:nth-child(2) > div > div.mt8 > div > div.jsx-1526806201.scrollable-grid > div > div:nth-child(1) > div.jsx-3384420229.column-group > div:nth-child(1) > div > ul > li') %>% html_text())
+                                    css='#live-list-item-1 > main > div.jsx-2521325328.page-content.relative > div:nth-child(2) > div > div.mt8 > div > div.jsx-1526806201.scrollable-grid > div > div:nth-child(1) > div.jsx-3384420229.column-group > div:nth-child(1) > div > ul > li') %>% html_text())
 (Biden_votes_colname <- html_nodes(html,
-                                  css='#live-list-item-1 > main > div.jsx-2521325328.page-content.relative > div:nth-child(2) > div > div.mt8 > div > div.jsx-1526806201.scrollable-grid > div > div:nth-child(1) > div.jsx-3384420229.column-group > div:nth-child(2) > div > div') %>% html_text())
+                                   css='#live-list-item-1 > main > div.jsx-2521325328.page-content.relative > div:nth-child(2) > div > div.mt8 > div > div.jsx-1526806201.scrollable-grid > div > div:nth-child(1) > div.jsx-3384420229.column-group > div:nth-child(2) > div > div') %>% html_text())
 (Biden_votes_column <- html_nodes(html,
-                                   css='#live-list-item-1 > main > div.jsx-2521325328.page-content.relative > div:nth-child(2) > div > div.mt8 > div > div.jsx-1526806201.scrollable-grid > div > div:nth-child(1) > div.jsx-3384420229.column-group > div:nth-child(2) > div > ul > li') %>% html_text())
+                                  css='#live-list-item-1 > main > div.jsx-2521325328.page-content.relative > div:nth-child(2) > div > div.mt8 > div > div.jsx-1526806201.scrollable-grid > div > div:nth-child(1) > div.jsx-3384420229.column-group > div:nth-child(2) > div > ul > li') %>% html_text())
 
 
 dim(Biden_percent_column) <- c(51, 1)
@@ -85,19 +92,22 @@ colnames(Biden_percent_column) <- Biden_percent_colname
 Biden_percent_column
 
 B_percent <- as.numeric(sub('%', '', Biden_percent_column))
-
+head(B_percent)
 
 dim(Biden_votes_column) <- c(51, 1)
 colnames(Biden_votes_column) <- Biden_votes_colname
-Biden_votes_column
+head(Biden_votes_column)
 
 B_votes <- as.numeric(gsub(',','',Biden_votes_column))
 
 dim(B_percent) <- c(51,1)
 dim(B_votes) <- c(51,1)
-
+head(B_percent)
+head(B_votes)
 colnames(B_percent) <- 'Biden_Percent'
 colnames(B_votes) <- 'Biden_Votes'
+head(B_percent)
+head(B_votes)
 
 df <- data.frame(state_column, B_percent, B_votes)
 head(df)
@@ -106,46 +116,57 @@ head(df)
                                     css='#live-list-item-1 > main > div.jsx-2521325328.page-content.relative > div:nth-child(2) > div > div.mt8 > div > div.jsx-1526806201.scrollable-grid > div > div:nth-child(2) > div.jsx-3384420229.column-group > div:nth-child(1) > div > ul > li') %>% html_text())
 
 (Trump_vote_column <- html_nodes(html,
-                                    css='#live-list-item-1 > main > div.jsx-2521325328.page-content.relative > div:nth-child(2) > div > div.mt8 > div > div.jsx-1526806201.scrollable-grid > div > div:nth-child(2) > div.jsx-3384420229.column-group > div:nth-child(2) > div > ul > li') %>% html_text())
+                                 css='#live-list-item-1 > main > div.jsx-2521325328.page-content.relative > div:nth-child(2) > div > div.mt8 > div > div.jsx-1526806201.scrollable-grid > div > div:nth-child(2) > div.jsx-3384420229.column-group > div:nth-child(2) > div > ul > li') %>% html_text())
 
 (T_percent <- as.numeric(gsub('%', '', Trump_percent_column)))
 (T_votes <- as.numeric(gsub(',', '', Trump_vote_column)))
 
 dim(T_percent) <- c(51,1)
 colnames(T_percent) <- 'Trump_Percent'
-T_percent
+head(T_percent)
 dim(T_votes) <- c(51,1)
 colnames(T_votes) <- 'Trump_Votes'
+head(T_votes)
 
 (B_total <- sum(B_votes))
 (T_total <- sum(T_votes))
 
+lbls <- c('Biden', 'Trump')
+percents <- round(c(B_total, T_total) / sum(B_total, T_total) * 100)
+lbls <- paste(lbls, percents)
+lbls <- paste(lbls, '%', sep='')
+
+colours <- c('#3333ff','#ff3333')
+
+# Pie chart to compare total votes
+pie(x=c(B_total, T_total),
+    labels=lbls,
+    col=colours,
+    )
+
 df <- cbind(df, T_percent, T_votes)
-df
-df[c(T,F,T,F)]
-(p_df <- cbind(df[c(T,F,T,F)]))
-(v_df <- cbind(df[c(F,T,F,T)]))
+head(df)
+head(df[c(T,F)])
+(p_df <- cbind(df[c(T,F)]))
+(v_df <- cbind(df[c(F,T)]))
 
 
 (Expected_vote_in <- html_nodes(html,
                                 css='#live-list-item-1 > main > div.jsx-2521325328.page-content.relative > div:nth-child(2) > div > div.mt8 > div > div.jsx-3921339373.dn.db-m > div.cell-list > ul > li') %>% html_text())
 
 df <- cbind(df, Expected_vote_in)
-df
-
+head(df)
 
 # Add abbreviation to dataframe
 abbrev <- read.csv('us-state-name.csv')[2]
 abbrev <- abbrev[,1]
 dim(abbrev) <- c(51,1)
 colnames(abbrev) <- 'Abbreviations'
-abbrev
+head(abbrev)
 
 df <- cbind(df, abbrev)
-
-(df <- df[c(7, 1:6)])
-
-df
+df <- df[c(7, 1:6)]
+head(df)
 
 # Create csv file
 write.csv(df,'united-states-presidential_election_2020.csv', row.names=FALSE)
@@ -177,12 +198,6 @@ result <- cbind(df$Abbreviations, matrix(ifelse(df$Biden_Votes > df$Trump_Votes,
 # B or T
 result[,2]
 
-# Total votes per candidate
-# Biden
-B_total
-# Trump
-T_total
-
 # Character vector which contains state name abbreviations supporting Biden
 B_states <- df$Abbreviations[ifelse(result[,2]=='B', TRUE, FALSE)]
 # Character vector which contains state name abbreviations supporting Trump
@@ -213,17 +228,18 @@ u2
 #change colname[1] for usmap package
 
 # Create a new dataframe having needed values for usmap package(corrected colnames, fips, etc.)
-(df_usmap <- data.frame(fips=usmap::fips(df$Abbreviations), # correct each state code along usmap package
+df_usmap <- data.frame(fips=usmap::fips(df$Abbreviations), # correct each state code along usmap package
                         abbr=df$Abbreviations,
                         full=df$States, 
                         Biden=df$Biden_Votes, 
                         Trump=df$Trump_Votes,
-                        res=factor(result[,2])))
+                        res=factor(result[,2]))
+head(df_usmap)
 
 ## Reference:
 # https://stackoverflow.com/questions/61330372/discrete-values-in-us-map-legend-using-plot-usmap
 
-# Combined
+# Whole states 
 (u3 <- usmap::plot_usmap(data=df_usmap, 
                          values='res',
                          labels=TRUE,
@@ -326,10 +342,10 @@ head(vote_summation)
 head(data)
 
 
-# Check summation data is same with previous data
+# Check the summation is same with previous data
 data$Votes[2]
 
 data$Votes[1] + data$Votes[2] == vote_summation[1] # Same
 
-
+# Draw plots on one frame
 multiplot(u1,u2,u3,stacked_barplot, cols=2)
