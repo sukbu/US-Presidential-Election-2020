@@ -1,9 +1,3 @@
-## The result of United States presidential election in 2020
-## Author: 1771087 Seok-beom, Jeon
-#ENV
-# Windows 10 Pro 1909
-# 
-
 ## Packages
 # Install packages below using install.packages('<package_name>')
 # HTML elements
